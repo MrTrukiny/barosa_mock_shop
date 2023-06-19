@@ -20,7 +20,8 @@ import {
 } from '@chakra-ui/react';
 import { useRecoilState } from 'recoil';
 import { isLoggedInAtom } from '../../state/authState';
-import Login from '../ loginAndRegister/LoginAndRegister';
+import LoginAndRegister from '../ loginAndRegister/LoginAndRegister';
+import AllProducts from '../products/AllProducts';
 
 const Dashboard: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useRecoilState(isLoggedInAtom);
@@ -67,7 +68,7 @@ const Dashboard: React.FC = () => {
         </TabList>
         <TabPanels>
           <TabPanel>
-            <p color="light">All Products Content</p>
+            <AllProducts />
           </TabPanel>
           {isLoggedIn && (
             <TabPanel>
@@ -82,9 +83,9 @@ const Dashboard: React.FC = () => {
           <ModalHeader>Login</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <Login onClose={onClose} />
+            <LoginAndRegister onClose={onClose} />
           </ModalBody>
-          <ModalFooter justifyContent="center"></ModalFooter>
+          <ModalFooter></ModalFooter>
         </ModalContent>
       </Modal>
     </Box>

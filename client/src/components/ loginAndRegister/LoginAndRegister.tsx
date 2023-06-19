@@ -1,12 +1,23 @@
 import React, { useState } from 'react';
-import { Box, FormControl, FormLabel, Input, Button, useToast, Text, Link, Center } from '@chakra-ui/react';
+import {
+  Box,
+  FormControl,
+  FormLabel,
+  Input,
+  Button,
+  useToast,
+  Text,
+  Link,
+  Center,
+  UseToastOptions,
+} from '@chakra-ui/react';
 import { useAuthState } from '../../state/authState';
 
-interface LoginProps {
+type LoginAndRegisterProps = {
   onClose: () => void;
-}
+};
 
-const LoginAndRegister: React.FC<LoginProps> = ({ onClose }) => {
+const LoginAndRegister: React.FC<LoginAndRegisterProps> = ({ onClose }) => {
   const { login } = useAuthState();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -93,6 +104,14 @@ const LoginAndRegister: React.FC<LoginProps> = ({ onClose }) => {
       password,
     };
 
+    const toastFailure: UseToastOptions = {
+      title: 'Registration Error',
+      description: 'An error occurred during registration. Please try again.',
+      status: 'error',
+      duration: 3000,
+      isClosable: true,
+    };
+
     fetch('http://localhost:3000/api/v1/auth/register', {
       method: 'POST',
       headers: {
@@ -114,24 +133,12 @@ const LoginAndRegister: React.FC<LoginProps> = ({ onClose }) => {
           onClose();
         } else {
           console.log('Registration failed');
-          toast({
-            title: 'Registration Error',
-            description: 'An error occurred during registration. Please try again.',
-            status: 'error',
-            duration: 3000,
-            isClosable: true,
-          });
+          toast(toastFailure);
         }
       })
       .catch((error) => {
         console.log('Registration error:', error);
-        toast({
-          title: 'Registration Error',
-          description: 'An error occurred during registration. Please try again.',
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        });
+        toast(toastFailure);
       });
   };
 
@@ -162,35 +169,19 @@ const LoginAndRegister: React.FC<LoginProps> = ({ onClose }) => {
         <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
       </FormControl>
       <Center mt={4}>
-        {isRegistering ? (
-          <Button
-            bg="transparent"
-            border="1px"
-            borderRadius="md"
-            px={4}
-            py={2}
-            fontWeight="medium"
-            _hover={{ bg: 'secondary', color: 'primary' }}
-            onClick={handleRegister}
-            width="100%"
-          >
-            Register
-          </Button>
-        ) : (
-          <Button
-            bg="transparent"
-            border="1px"
-            borderRadius="md"
-            px={4}
-            py={2}
-            fontWeight="medium"
-            _hover={{ bg: 'secondary', color: 'primary' }}
-            onClick={handleLogin}
-            width="100%"
-          >
-            Login
-          </Button>
-        )}
+        <Button
+          bg="transparent"
+          border="1px"
+          borderRadius="md"
+          px={4}
+          py={2}
+          fontWeight="medium"
+          _hover={{ bg: 'secondary', color: 'primary' }}
+          onClick={isRegistering ? handleRegister : handleLogin}
+          width="100%"
+        >
+          {isRegistering ? 'Register' : 'Login'}
+        </Button>
       </Center>
       <Text mt={2} textAlign="center">
         {isRegistering ? (

@@ -1,8 +1,6 @@
-import server from './server';
+import Server from './server';
 
-const PORT = process.env.PORT || 3000;
+const server = new Server();
 
-server.listen(PORT, () => {
-  // eslint-disable-next-line no-console
-  console.log(`Server listening on PORT: ${PORT}`);
-});
+server.dbConnection();
+server.listen();
