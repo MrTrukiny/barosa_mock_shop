@@ -20,8 +20,9 @@ import {
 } from '@chakra-ui/react';
 import { useRecoilState } from 'recoil';
 import { isLoggedInAtom } from '../../state/authState';
-import LoginAndRegister from '../ loginAndRegister/LoginAndRegister';
 import AllProducts from '../products/AllProducts';
+import LoginAndRegister from '../ loginAndRegister/LoginAndRegister';
+import Cart from '../products/Cart';
 
 const Dashboard: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useRecoilState(isLoggedInAtom);
@@ -59,6 +60,7 @@ const Dashboard: React.FC = () => {
           >
             {isLoggedIn ? 'Logout' : 'Login'}
           </Button>
+          <Cart />
         </Flex>
       </Flex>
       <Tabs colorScheme="accent">

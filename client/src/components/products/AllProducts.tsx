@@ -132,7 +132,7 @@ const AllProducts: React.FC = () => {
       </InputGroup>
       <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} spacing={4}>
         {filteredProducts.map((product) => (
-          <ProductCard key={product.id} product={product} />
+          <ProductCard key={product.id} product={product} isLoggedIn />
         ))}
       </SimpleGrid>
     </Box>
