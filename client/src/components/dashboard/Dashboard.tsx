@@ -1,18 +1,37 @@
-import React, { useState } from 'react';
-import { Box, Tab, TabList, TabPanel, TabPanels, Tabs, Button, Avatar, Flex } from '@chakra-ui/react';
+import React from 'react';
+import {
+  Box,
+  Tab,
+  TabList,
+  TabPanel,
+  TabPanels,
+  Tabs,
+  Button,
+  Avatar,
+  Flex,
+  useDisclosure,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
+  ModalFooter,
+} from '@chakra-ui/react';
+import { useRecoilState } from 'recoil';
+import { isLoggedInAtom } from '../../state/authState';
+import Login from '../ loginAndRegister/LoginAndRegister';
 
 const Dashboard: React.FC = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [username, setUsername] = useState('');
+  const [isLoggedIn, setIsLoggedIn] = useRecoilState(isLoggedInAtom);
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   const handleLogin = () => {
-    setIsLoggedIn(true);
-    setUsername('John Doe'); // Replace with the actual username when implementing the login functionality
+    onOpen();
   };
 
   const handleLogout = () => {
     setIsLoggedIn(false);
-    setUsername('');
   };
 
   return (
@@ -24,8 +43,7 @@ const Dashboard: React.FC = () => {
         <Flex align="center">
           {isLoggedIn && (
             <Flex align="center" mr={4}>
-              <Box mr={2}>{username}</Box>
-              <Avatar name={username} size="sm" />
+              <Avatar name={'John Doe'} size="sm" />
             </Flex>
           )}
           <Button
@@ -58,6 +76,17 @@ const Dashboard: React.FC = () => {
           )}
         </TabPanels>
       </Tabs>
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Login</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Login onClose={onClose} />
+          </ModalBody>
+          <ModalFooter justifyContent="center"></ModalFooter>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 };
