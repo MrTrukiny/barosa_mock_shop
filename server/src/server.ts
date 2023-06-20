@@ -31,7 +31,10 @@ class Server {
   }
 
   public async dbConnection() {
-    await connectToDb(process.env.MONGODB_URI || 'mongodb://localhost:27017/barosa_db_dev');
+    await connectToDb(
+      process.env.MONGO_DB_URI ||
+        'mongodb+srv://MrTrukiny:DphQcLDObO7CkX5f@cluster0barosa.ipbe9rj.mongodb.net/barosa_db_dev',
+    );
   }
 
   private preMiddlewares() {
