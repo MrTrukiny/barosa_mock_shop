@@ -11,7 +11,7 @@ export interface AuthActionsParams {
 
 export interface AuthActions {
   registerUser: ({ firstName, lastName, email, password }: AuthRegister) => Promise<UserMongoose>;
-  loginUser: ({ email, password }: AuthLogin) => Promise<void>;
+  loginUser: ({ email, password }: AuthLogin) => Promise<UserMongoose>;
 }
 
 const makeAuthActions = ({ findUserByEmail, hashPassword, saveUser, verifyPassword }: AuthActionsParams) => {
@@ -38,16 +38,16 @@ const makeAuthActions = ({ findUserByEmail, hashPassword, saveUser, verifyPasswo
     });
   }
 
-  async function loginUser({ email, password }: AuthLogin): Promise<void> {
+  async function loginUser({ email, password }: AuthLogin): Promise<UserMongoose> {
     const user = await findUserByEmail({ email, select: { password: 1 } });
-
     const matchPasswords = await verifyPassword(user?.password as string, password);
 
     if (!user || !matchPasswords) {
       throw new ApiError('AuthError', AuthErrorMessages.INVALID_CREDENTIALS, 400);
     }
 
-    return;
+    delete user.password;
+    return user;
   }
 };
 

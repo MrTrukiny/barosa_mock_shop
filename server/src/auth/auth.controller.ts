@@ -26,7 +26,7 @@ const makeAuthController = ({ registerUser, loginUser }: AuthActions) => {
 
   async function postLogin(httpRequest: HttpReq): Promise<ControllerResponse> {
     const { body } = httpRequest as AuthHttpPostReq;
-    await loginUser({ ...body } as AuthLogin);
+    const user = await loginUser({ ...body } as AuthLogin);
 
     return {
       response: {
@@ -34,6 +34,7 @@ const makeAuthController = ({ registerUser, loginUser }: AuthActions) => {
         body: {
           status: ApiStatus.OK,
           message: AuthSuccessMessages.LOGGED_IN,
+          data: { user },
         },
       },
     };

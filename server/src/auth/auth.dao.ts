@@ -26,7 +26,7 @@ const makeAuthDao = ({ AuthModel }: { AuthModel: Model<UserMongoose> }): AuthDao
     select?: object;
   }): Promise<UserMongoose | null> {
     const user = await AuthModel.findOne({ ...userData }, { ...select });
-    return user;
+    return user?.toObject() || null;
   }
 };
 
