@@ -4,7 +4,8 @@
   "description": "This is a tiny eCommerce-like application build with the MERN Stack and TypeScript",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "install": "cd client && npm install && cd ../server && npm install",
+    "start": "concurrently \"cd client && npx vite\" \"cd server && npx tsc && node build/index.js\""
   },
   "repository": {
     "type": "git",
@@ -21,5 +22,8 @@
   "bugs": {
     "url": "https://github.com/MrTrukiny/barosa_mock_shop/issues"
   },
-  "homepage": "https://github.com/MrTrukiny/barosa_mock_shop#readme"
+  "homepage": "https://github.com/MrTrukiny/barosa_mock_shop#readme",
+  "dependencies": {
+    "concurrently": "^8.2.0"
+  }
 }
