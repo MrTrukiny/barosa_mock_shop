@@ -4,6 +4,7 @@ import { FiPlus } from 'react-icons/fi';
 import { Product } from '../../state/productState';
 import { useCartState } from '../../state/cartState';
 import { useAuthState } from '../../state/authState';
+import { formatCurrency } from '../../utils/functions';
 
 type ProductCardProps = {
   product: Product;
@@ -68,7 +69,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           {product.category.split(' ')[0]}
         </Box>
         <Text fontSize="lg" fontWeight="bold" mt="auto" ml="auto">
-          ${product.price}
+          {formatCurrency(product.price, { code: 'USD', symbol: '$' })}
         </Text>
       </Box>
       {isLoggedIn && isHovered && (

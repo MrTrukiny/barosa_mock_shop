@@ -29,6 +29,7 @@ import useFetchOrders from '../../hooks/useFetchOrders';
 
 const Cart: React.FC = () => {
   // State
+  const { isLoggedIn } = useAuthState();
   const setActiveTab = useSetRecoilState(activeTabAtom);
   const { cart, setCart, cartQuantity, setCartQuantity, getCartSubtotal, getCartTotal } = useCartState();
   const { fetchOrders } = useFetchOrders();
@@ -130,41 +131,43 @@ const Cart: React.FC = () => {
 
   return (
     <>
-      <IconButton
-        icon={
-          <>
-            <FiShoppingCart size={24} />
-            {cartQuantity > 0 && (
-              <span
-                style={{
-                  position: 'absolute',
-                  top: '-8px',
-                  right: '-8px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '12px',
-                  fontWeight: 'bold',
-                  width: '18px',
-                  height: '18px',
-                  borderRadius: '50%',
-                  backgroundColor: '#FF3860',
-                  color: '#FFF',
-                }}
-              >
-                {cartQuantity}
-              </span>
-            )}
-          </>
-        }
-        aria-label="Shopping Cart"
-        variant="ghost"
-        bg="accent"
-        borderRadius="md"
-        _hover={{ bg: 'secondary', color: 'primary' }}
-        ml="3"
-        onClick={onOpen}
-      />
+      {isLoggedIn && (
+        <IconButton
+          icon={
+            <>
+              <FiShoppingCart size={24} />
+              {cartQuantity > 0 && (
+                <span
+                  style={{
+                    position: 'absolute',
+                    top: '-8px',
+                    right: '-8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    width: '18px',
+                    height: '18px',
+                    borderRadius: '50%',
+                    backgroundColor: '#FF3860',
+                    color: '#FFF',
+                  }}
+                >
+                  {cartQuantity}
+                </span>
+              )}
+            </>
+          }
+          aria-label="Shopping Cart"
+          variant="ghost"
+          bg="accent"
+          borderRadius="md"
+          _hover={{ bg: 'secondary', color: 'primary' }}
+          ml="3"
+          onClick={onOpen}
+        />
+      )}
 
       {cart.products.length > 0 && (
         <Drawer isOpen={isOpen} placement="right" onClose={onClose}>
