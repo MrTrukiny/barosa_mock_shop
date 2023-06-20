@@ -14,19 +14,24 @@ import {
   Flex,
   UseToastOptions,
   useToast,
+  Box,
 } from '@chakra-ui/react';
-import { useRecoilValue } from 'recoil';
+import { useSetRecoilState } from 'recoil';
 import { FiShoppingCart } from 'react-icons/fi';
-import { cartAtom, cartQuantityAtom, useCartState } from '../../state/cartState';
+import { useCartState } from '../../state/cartState';
 import { useAuthState } from '../../state/authState';
 import { Product } from '../../state/productState';
 import CartItem from './CartItem';
+import { Order, OrderStatus } from '../../state/orderState';
+import { activeTabAtom } from '../../state/dashboardState';
+import { orderService } from '../../services/order.service';
+import useFetchOrders from '../../hooks/useFetchOrders';
 
 const Cart: React.FC = () => {
   // State
-  const cart = useRecoilValue(cartAtom);
-  const cartQuantity = useRecoilValue(cartQuantityAtom);
-  const { getCartSubtotal, getCartTotal } = useCartState();
+  const setActiveTab = useSetRecoilState(activeTabAtom);
+  const { cart, setCart, cartQuantity, setCartQuantity, getCartSubtotal, getCartTotal } = useCartState();
+  const { fetchOrders } = useFetchOrders();
 
   // Hooks
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -38,13 +43,15 @@ const Cart: React.FC = () => {
   const { userId } = useAuthState();
 
   const handleCheckout = () => {
-    const checkoutData = {
+    const checkoutData: Order = {
       userId,
       products: cart.products,
       subTotal,
-      tax: 15,
+      tax: subTotal * 0.15,
       total: total,
-      currency: 'Dollar',
+      currency: { code: 'USD', symbol: '$' },
+      status: OrderStatus.ACTIVE,
+      createdAt: new Date().toISOString(),
     };
     const checkoutFailedToast: UseToastOptions = {
       title: 'Checkout Failed',
@@ -61,9 +68,13 @@ const Cart: React.FC = () => {
       },
       body: JSON.stringify(checkoutData),
     })
-      .then((response) => {
+      .then(async (response) => {
         if (response.ok) {
           console.log('Checkout successful');
+          setCart((prevCart) => ({ ...prevCart, products: [] }));
+          setCartQuantity(0);
+          setActiveTab(1);
+          await fetchOrders();
           onClose();
         } else {
           console.log('Checkout failed');
@@ -74,6 +85,43 @@ const Cart: React.FC = () => {
         console.log('Checkout error:', error);
         toast(checkoutFailedToast);
       });
+  };
+
+  const handleCancel = () => {
+    setCart((prevCart) => ({ ...prevCart, products: [] }));
+    setCartQuantity(0);
+    onClose();
+  };
+
+  const handleEdit = async () => {
+    const editOrder: Order = {
+      userId,
+      products: cart.products,
+      subTotal,
+      tax: subTotal * 0.15,
+      total: total,
+      currency: { code: 'USD', symbol: '$' },
+      status: OrderStatus.ACTIVE,
+      updatedAt: new Date().toISOString(),
+    };
+
+    try {
+      await orderService.updateOrder(cart.orderId as string, editOrder);
+      console.log('Order Edited successfully');
+      toast({
+        title: 'Order Edited',
+        description: 'Your order has been edited successfully!',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+      setCart({ orderId: '', products: [] });
+      setCartQuantity(0);
+      await fetchOrders();
+      onClose();
+    } catch (error) {
+      console.log('Edit order error:', error);
+    }
   };
 
   return (
@@ -114,48 +162,67 @@ const Cart: React.FC = () => {
         onClick={onOpen}
       />
 
-      <Drawer isOpen={isOpen} placement="right" onClose={onClose}>
-        <DrawerOverlay>
-          <DrawerContent>
-            <DrawerCloseButton />
-            <DrawerHeader>Your Cart</DrawerHeader>
-            <DrawerBody>
-              {cart.products.map((product: Product) => (
-                <CartItem key={product.id} product={{ ...product, quantity: 1 }} />
-              ))}
-            </DrawerBody>
-            <DrawerFooter display="grid" gridTemplateColumns="1fr" gap={4} textAlign="left">
-              <Flex justifyContent="space-between">
-                <Text fontWeight="bold">Subtotal:</Text>
-                <Text fontWeight="bold" textAlign="right">
-                  ${subTotal.toFixed(2)}
-                </Text>
-              </Flex>
-              <Flex justifyContent="space-between">
-                <Text fontWeight="bold">Tax (15%):</Text>
-                <Text fontWeight="bold" textAlign="right">
-                  ${(subTotal * 0.15).toFixed(2)}
-                </Text>
-              </Flex>
-              <Flex justifyContent="space-between">
-                <Text fontWeight="bold">Total:</Text>
-                <Text fontWeight="bold" textAlign="right">
-                  ${total.toFixed(2)}
-                </Text>
-              </Flex>
-              <Button
-                size="lg"
-                fontWeight="bold"
-                _hover={{ bg: 'secondary', color: 'primary' }}
-                justifySelf="center"
-                onClick={handleCheckout}
-              >
-                Checkout
-              </Button>
-            </DrawerFooter>
-          </DrawerContent>
-        </DrawerOverlay>
-      </Drawer>
+      {cart.products.length > 0 && (
+        <Drawer isOpen={isOpen} placement="right" onClose={onClose}>
+          <DrawerOverlay>
+            <DrawerContent>
+              <DrawerCloseButton />
+              <DrawerHeader>Your Cart</DrawerHeader>
+              <DrawerBody>
+                {cart.products.map((product: Product) => (
+                  <CartItem key={product.id} product={{ ...product, quantity: 1 }} />
+                ))}
+              </DrawerBody>
+              <DrawerFooter display="grid" gridTemplateColumns="1fr" gap={4} textAlign="left">
+                <Flex justifyContent="space-between">
+                  <Text fontWeight="bold">Subtotal:</Text>
+                  <Text fontWeight="bold" textAlign="right">
+                    ${subTotal.toFixed(2)}
+                  </Text>
+                </Flex>
+                <Flex justifyContent="space-between">
+                  <Text fontWeight="bold">Tax (15%):</Text>
+                  <Text fontWeight="bold" textAlign="right">
+                    ${(subTotal * 0.15).toFixed(2)}
+                  </Text>
+                </Flex>
+                <Flex justifyContent="space-between">
+                  <Text fontWeight="bold">Total:</Text>
+                  <Text fontWeight="bold" textAlign="right">
+                    ${total.toFixed(2)}
+                  </Text>
+                </Flex>
+                <Flex justifyContent="space-between">
+                  <Box width="50%">
+                    <Button
+                      size="lg"
+                      fontWeight="bold"
+                      _hover={{ bg: 'secondary', color: 'primary' }}
+                      justifySelf="center"
+                      onClick={cart.orderId ? handleEdit : handleCheckout}
+                      width="90%"
+                    >
+                      {cart.orderId ? 'Save' : 'Checkout'}
+                    </Button>
+                  </Box>
+                  <Box width="50%">
+                    <Button
+                      size="lg"
+                      fontWeight="bold"
+                      _hover={{ bg: 'secondary', color: 'primary' }}
+                      justifySelf="center"
+                      onClick={handleCancel}
+                      width="90%"
+                    >
+                      Cancel
+                    </Button>
+                  </Box>
+                </Flex>
+              </DrawerFooter>
+            </DrawerContent>
+          </DrawerOverlay>
+        </Drawer>
+      )}
     </>
   );
 };

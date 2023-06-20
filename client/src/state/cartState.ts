@@ -1,17 +1,15 @@
 import { atom, useRecoilState } from 'recoil';
 import { Product } from './productState';
 
-export interface CartProduct extends Product {
-  quantity: number;
-}
-
 export interface Cart {
-  products: CartProduct[];
+  orderId: string;
+  products: Product[];
 }
 
 export const cartAtom = atom<Cart>({
   key: 'cart',
   default: {
+    orderId: '',
     products: [],
   },
 });
@@ -95,6 +93,9 @@ export const useCartState = () => {
 
   return {
     cart,
+    setCart,
+    cartQuantity,
+    setCartQuantity,
     addProduct,
     removeProduct,
     updateProductQuantity,

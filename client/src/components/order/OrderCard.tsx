@@ -1,36 +1,110 @@
-import React from 'react';
-import { Box, Flex, Text, Button, Table, Thead, Tbody, Tr, Th, Td } from '@chakra-ui/react';
-import { Order, OrderStatus } from '../../state/orderState';
+import React, { useState } from 'react';
+import { Box, Flex, Text, Button, Table, Thead, Tbody, Tr, Th, Td, useToast, Select } from '@chakra-ui/react';
+import { Order, OrderStatus, OrderCurrency } from '../../state/orderState';
+import { useCartState } from '../../state/cartState';
+import { useOrderState } from '../../state/orderState';
+import { orderService } from '../../services/order.service';
+import useFetchOrders from '../../hooks/useFetchOrders';
+import { formatCurrency } from '../../utils/functions';
 
 type OrderCardProps = {
   order: Order;
 };
 
 const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
-  const currencies = {
-    Dollar: '$',
-    Euro: '€',
-    Lempira: 'L',
-  };
+  // State
+  const { setCart, setCartQuantity } = useCartState();
+  const { editingOrder, setEditingOrder } = useOrderState();
+  const { fetchOrders } = useFetchOrders();
+  const [rating, setRating] = useState<number>(order.rating || 5);
+  const [orderCurrency, setOrderCurrency] = useState<OrderCurrency>(order.currency || {
+    code: 'USD',
+    symbol: '$',
+  });
 
-  const { id, products, currency, status } = order;
+  // Hooks
+  const toast = useToast();
 
+  // Variables
+  const { id, products, status, createdAt } = order;
   const isOrderActive = status === OrderStatus.ACTIVE;
+  const isOrderCompleted = status === OrderStatus.COMPLETED;
+  const isEditingOrder = editingOrder?.id === id;
 
-  const handlePayClick = () => {
-    // Handle pay click
+  const handlePayClick = async () => {
+    try {
+      await orderService.updateOrder(id as string, { ...order, status: OrderStatus.COMPLETED });
+      toast({
+        title: 'Order paid',
+        description: 'Your order has been paid successfully.',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
+      await fetchOrders();
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   const handleEditClick = () => {
-    // Handle edit click
+    setEditingOrder(order);
+    setCart({ orderId: id as string, products });
+    setCartQuantity(products.length);
   };
 
-  const handleDeleteClick = () => {
-    // Handle delete click
+  const handleDeleteClick = async () => {
+    try {
+      await orderService.deleteOrder(id as string);
+      toast({
+        title: 'Order deleted',
+        description: 'Your order has been deleted successfully.',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
+      await fetchOrders();
+    } catch (error) {
+      console.log(error);
+    }
   };
 
-  const calculateFieldSum = (field: keyof (typeof products)[0]) => {
-    return products.reduce((sum, product) => sum + product[field], 0);
+  const handleCancelClick = () => {
+    // Handle cancel click
+    setEditingOrder(null);
+    setCart({ orderId: '', products: [] });
+    setCartQuantity(0);
+  };
+
+  const handleRateOrder = async () => {
+    try {
+      await orderService.updateOrder(id as string, { ...order, rating });
+      toast({
+        title: 'Order rated',
+        description: 'Your order has been rated successfully.',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
+      await fetchOrders();
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleCurrencyChange = async (code: string) => {
+    let newSymbol = '$';
+    if (code === 'EUR') newSymbol = '€';
+    if (code === 'HNL') newSymbol = 'L';
+      const newCurrency: OrderCurrency = {
+        code: code as 'USD' | 'EUR' | 'HNL',
+        symbol: newSymbol as '$' | '€' | 'L',
+      };
+      setOrderCurrency(newCurrency);
+  };
+
+  const calculateQuantitySum = () => {
+    return products.reduce((acc, curr) => acc + curr.quantity, 0);
   };
 
   return (
@@ -47,7 +121,17 @@ const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
           <Text fontWeight="bold" mr={2}>
             Currency:
           </Text>
-          <Text>{currency}</Text>
+          <Select value={orderCurrency.code} disabled={!isEditingOrder} onChange={(e) => handleCurrencyChange(e.target.value)}>
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+            <option value="HNL">HNL</option>
+          </Select>
+        </Flex>
+        <Flex>
+          <Text fontWeight="bold" mr={2}>
+            Date:
+          </Text>
+          <Text>{createdAt?.split('T')[0]}</Text>
         </Flex>
       </Flex>
       <Table variant="simple">
@@ -65,33 +149,60 @@ const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
             <Tr key={product.id}>
               <Td>{product.title}</Td>
               <Td>{product.quantity}</Td>
-              <Td>
-                {currencies[currency]} {product.price.toFixed(2)}
-              </Td>
-              <Td>
-                {currencies[currency]} {(product.price * product.quantity * 0.15).toFixed(2)}
-              </Td>
-              <Td>
-                {currencies[currency]} {(product.price * product.quantity * 1.15).toFixed(2)}
-              </Td>
+              <Td>{formatCurrency(product.price, orderCurrency)}</Td>
+              <Td>{formatCurrency(product.price * product.quantity * 0.15, orderCurrency)}</Td>
+              <Td>{formatCurrency(product.price * product.quantity * 1.15, orderCurrency)}</Td>
             </Tr>
           ))}
           <Tr>
-            <Td fontWeight="bold">Sum:</Td>
-            <Td fontWeight="bold">{calculateFieldSum('quantity')}</Td>
-            <Td fontWeight="bold">
-              {currencies[currency]} {calculateFieldSum('price').toFixed(2)}
+            <Td>
+              {' '}
+              {isOrderCompleted && (
+                <Flex alignItems="center" width={300}>
+                  <Button
+                    colorScheme="yellow"
+                    variant="solid"
+                    ml={2}
+                    onClick={handleRateOrder}
+                    _hover={{ bg: '#6b46c1' }}
+                    _active={{ bg: '#6b46c1' }}
+                  >
+                    Rate
+                  </Button>
+                  <Select value={rating || 5} onChange={(e) => setRating(Number(e.target.value))} width={'120px'}>
+                    {[1, 2, 3, 4, 5].map((value) => (
+                      <option key={value} value={value}>
+                        {value}
+                      </option>
+                    ))}
+                  </Select>
+                </Flex>
+              )}
             </Td>
-            <Td fontWeight="bold">
-              {currencies[currency]} {calculateFieldSum('price').toFixed(2)}
-            </Td>
-            <Td fontWeight="bold">
-              {currencies[currency]} {calculateFieldSum('price').toFixed(2)}
-            </Td>
+            <Td fontWeight="bold">{calculateQuantitySum()}</Td>
+            <Td fontWeight="bold">{formatCurrency(order.subTotal, orderCurrency)}</Td>
+            <Td fontWeight="bold">{formatCurrency(order.tax, orderCurrency)}</Td>
+            <Td fontWeight="bold">{formatCurrency(order.total, orderCurrency)}</Td>
           </Tr>
         </Tbody>
       </Table>
-      {isOrderActive && (
+      {!isOrderActive ? null : isEditingOrder ? (
+        <Flex justifyContent="center" mt={4}>
+          <Button colorScheme="green" variant="solid" mr={2} _hover={{ bg: '#243E36' }} _active={{ bg: '#243e36' }}>
+            Save
+          </Button>
+          <Button
+            colorScheme="red"
+            variant="solid"
+            mr={2}
+            _hover={{ bg: '#243E36' }}
+            _active={{ bg: '#243e36' }}
+            onClick={handleCancelClick}
+          >
+            Cancel
+          </Button>
+        </Flex>
+      ) : editingOrder?.id ? null : (
         <Flex justifyContent="center" mt={4}>
           <Button
             colorScheme="green"
