@@ -50,10 +50,11 @@ const LoginAndRegister: React.FC<LoginAndRegisterProps> = ({ onClose }) => {
       },
       body: JSON.stringify(userData),
     })
-      .then((response) => {
+      .then(async (response) => {
         if (response.ok) {
           console.log('Login successful');
-          login();
+          const userId = (await response.json()).data.user.id;
+          login(userId);
           toast({
             title: 'Login Successful',
             description: 'You have successfully logged in!',
@@ -119,10 +120,11 @@ const LoginAndRegister: React.FC<LoginAndRegisterProps> = ({ onClose }) => {
       },
       body: JSON.stringify(userData),
     })
-      .then((response) => {
+      .then(async (response) => {
         if (response.ok) {
           console.log('Registration successful');
-          login();
+          const userId = (await response.json()).data.user.id;
+          login(userId);
           toast({
             title: 'Registration Successful',
             description: 'You have successfully registered!',

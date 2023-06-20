@@ -7,6 +7,7 @@ export interface Product {
   description: string;
   category: string;
   image: string;
+  quantity: number;
   rating: {
     rate: number;
     count: number;
@@ -19,7 +20,6 @@ export const productListState = atom<Product[]>({
 });
 
 export const fetchProductList = async () => {
-  // Simulating an API call to fetch product data
   const response = await fetch('https://fakestoreapi.com/products');
   const data = await response.json();
   return data;

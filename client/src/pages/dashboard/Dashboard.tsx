@@ -18,14 +18,20 @@ import {
   ModalBody,
   ModalFooter,
 } from '@chakra-ui/react';
-import { useRecoilState } from 'recoil';
-import { isLoggedInAtom } from '../../state/authState';
-import AllProducts from '../products/AllProducts';
-import LoginAndRegister from '../ loginAndRegister/LoginAndRegister';
-import Cart from '../products/Cart';
+import { useRecoilState, useRecoilValue } from 'recoil';
+import { isLoggedInAtom, userIdAtom } from '../../state/authState';
+
+import LoginAndRegister from '../../components/ loginAndRegister/LoginAndRegister';
+import AllOrders from '../../components/order/AllOrders';
+import AllProducts from '../../components/product/AllProducts';
+import Cart from '../../components/cart/Cart';
 
 const Dashboard: React.FC = () => {
+  // State
   const [isLoggedIn, setIsLoggedIn] = useRecoilState(isLoggedInAtom);
+  const userId = useRecoilValue(userIdAtom);
+
+  // Hooks
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const handleLogin = () => {
@@ -74,7 +80,7 @@ const Dashboard: React.FC = () => {
           </TabPanel>
           {isLoggedIn && (
             <TabPanel>
-              <p color="light">My Orders Content</p>
+              <AllOrders userId={userId} />
             </TabPanel>
           )}
         </TabPanels>
