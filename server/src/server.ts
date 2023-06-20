@@ -3,6 +3,7 @@ import cors from 'cors';
 
 /* Routes */
 import authRouter from './auth/auth.routes';
+import orderRouter from './order/order.routes';
 
 /* Middlewares */
 import responseHandlerMiddleware from './shared/middlewares/responseHandler.middleware';
@@ -16,11 +17,12 @@ class Server {
   public PORT = process.env.PORT || 3000;
   public API_V1_URL = '/api/v1';
   public server = express();
-  public paths: { auth: string };
+  public paths: { auth: string; order: string };
 
   constructor() {
     this.paths = {
       auth: `${this.API_V1_URL}/auth`,
+      order: `${this.API_V1_URL}/orders`,
     };
 
     this.preMiddlewares();
@@ -39,6 +41,7 @@ class Server {
 
   private routes() {
     this.server.use(this.paths.auth, authRouter);
+    this.server.use(this.paths.order, orderRouter);
   }
 
   private postMiddlewares() {

@@ -4,7 +4,7 @@ import ApiError from '../errors/base.error';
 
 const errorHandlerMiddleware: ErrorRequestHandler = (error, _req, res, next): Response | void => {
   /** Uncomment to debug errors */
-  //console.error('Error from ErrorHandlerMiddleware Stack =>', error);
+  // console.error('Error from ErrorHandlerMiddleware Stack =>', error);
   // console.error('Error from ErrorHandlerMiddleware Raw =>', JSON.stringify(error, null, 2));
 
   if (res.headersSent) {
@@ -21,14 +21,6 @@ const errorHandlerMiddleware: ErrorRequestHandler = (error, _req, res, next): Re
   };
 
   const validationErrors: { [key: string]: string } = {};
-  /**  Joi Validation Errors */
-  /* if (error instanceof ValidationError) {
-    error.details.forEach((detail) => {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      validationErrors[detail.context!.key!] = `Field ${detail.message.replaceAll(/"/g, "'")}`;
-    });
-    setValidationErrorProps(errorResponse, validationErrors);
-  } */
 
   /** Mongoose Errors */
   if (error.name === 'ValidationError' && error.errors) {
