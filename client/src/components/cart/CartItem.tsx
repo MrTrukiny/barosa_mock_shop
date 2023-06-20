@@ -1,11 +1,12 @@
 import React from 'react';
 import { Box, Text, Flex, IconButton, Image, VStack } from '@chakra-ui/react';
 import { FiPlus, FiMinus } from 'react-icons/fi';
-import { CartProduct, useCartState } from '../../state/cartState';
+import { useCartState } from '../../state/cartState';
 import { DeleteIcon } from '@chakra-ui/icons';
+import { Product } from '../../state/productState';
 
 type CartItemProps = {
-  product: CartProduct;
+  product: Product;
 };
 
 const CartItem: React.FC<CartItemProps> = ({ product }) => {

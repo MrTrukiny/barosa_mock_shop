@@ -22,7 +22,7 @@ import { useCartState } from '../../state/cartState';
 import { useAuthState } from '../../state/authState';
 import { Product } from '../../state/productState';
 import CartItem from './CartItem';
-import { Order, OrderStatus } from '../../state/orderState';
+import { Order, OrderStatus, useOrderState } from '../../state/orderState';
 import { activeTabAtom } from '../../state/dashboardState';
 import { orderService } from '../../services/order.service';
 import useFetchOrders from '../../hooks/useFetchOrders';
@@ -32,6 +32,7 @@ const Cart: React.FC = () => {
   const setActiveTab = useSetRecoilState(activeTabAtom);
   const { cart, setCart, cartQuantity, setCartQuantity, getCartSubtotal, getCartTotal } = useCartState();
   const { fetchOrders } = useFetchOrders();
+  const { editingOrder, setEditingOrder } = useOrderState();
 
   // Hooks
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -94,13 +95,15 @@ const Cart: React.FC = () => {
   };
 
   const handleEdit = async () => {
+    if (!editingOrder) return;
+
     const editOrder: Order = {
       userId,
       products: cart.products,
       subTotal,
       tax: subTotal * 0.15,
       total: total,
-      currency: { code: 'USD', symbol: '$' },
+      currency: editingOrder.currency,
       status: OrderStatus.ACTIVE,
       updatedAt: new Date().toISOString(),
     };
@@ -118,6 +121,7 @@ const Cart: React.FC = () => {
       setCart({ orderId: '', products: [] });
       setCartQuantity(0);
       await fetchOrders();
+      setEditingOrder(null);
       onClose();
     } catch (error) {
       console.log('Edit order error:', error);
@@ -170,7 +174,7 @@ const Cart: React.FC = () => {
               <DrawerHeader>Your Cart</DrawerHeader>
               <DrawerBody>
                 {cart.products.map((product: Product) => (
-                  <CartItem key={product.id} product={{ ...product, quantity: 1 }} />
+                  <CartItem key={product.id} product={{ ...product }} />
                 ))}
               </DrawerBody>
               <DrawerFooter display="grid" gridTemplateColumns="1fr" gap={4} textAlign="left">

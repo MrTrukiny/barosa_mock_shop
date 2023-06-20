@@ -6,6 +6,7 @@ import { useOrderState } from '../../state/orderState';
 import { orderService } from '../../services/order.service';
 import useFetchOrders from '../../hooks/useFetchOrders';
 import { formatCurrency } from '../../utils/functions';
+import { useAuthState } from '../../state/authState';
 
 type OrderCardProps = {
   order: Order;
@@ -13,14 +14,17 @@ type OrderCardProps = {
 
 const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
   // State
+  const { userId } = useAuthState();
   const { setCart, setCartQuantity } = useCartState();
   const { editingOrder, setEditingOrder } = useOrderState();
   const { fetchOrders } = useFetchOrders();
   const [rating, setRating] = useState<number>(order.rating || 5);
-  const [orderCurrency, setOrderCurrency] = useState<OrderCurrency>(order.currency || {
-    code: 'USD',
-    symbol: '$',
-  });
+  const [orderCurrency, setOrderCurrency] = useState<OrderCurrency>(
+    order.currency || {
+      code: 'USD',
+      symbol: '$',
+    },
+  );
 
   // Hooks
   const toast = useToast();
@@ -76,6 +80,38 @@ const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
     setCartQuantity(0);
   };
 
+  const handleSave = async () => {
+    if (!editingOrder) return;
+
+    const editOrder: Order = {
+      userId,
+      products: editingOrder.products,
+      subTotal: editingOrder.subTotal,
+      tax: editingOrder.tax,
+      total: editingOrder.total,
+      currency: editingOrder.currency,
+      status: OrderStatus.ACTIVE,
+    };
+
+    try {
+      await orderService.updateOrder(order.id as string, editOrder);
+      console.log('Order Edited successfully');
+      toast({
+        title: 'Order Edited',
+        description: 'Your order has been edited successfully!',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+      setCart({ orderId: '', products: [] });
+      setCartQuantity(0);
+      await fetchOrders();
+      setEditingOrder(null);
+    } catch (error) {
+      console.log('Edit order error:', error);
+    }
+  };
+
   const handleRateOrder = async () => {
     try {
       await orderService.updateOrder(id as string, { ...order, rating });
@@ -93,14 +129,16 @@ const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
   };
 
   const handleCurrencyChange = async (code: string) => {
+    if (!editingOrder) return;
     let newSymbol = '$';
     if (code === 'EUR') newSymbol = '€';
     if (code === 'HNL') newSymbol = 'L';
-      const newCurrency: OrderCurrency = {
-        code: code as 'USD' | 'EUR' | 'HNL',
-        symbol: newSymbol as '$' | '€' | 'L',
-      };
-      setOrderCurrency(newCurrency);
+    const newCurrency: OrderCurrency = {
+      code: code as 'USD' | 'EUR' | 'HNL',
+      symbol: newSymbol as '$' | '€' | 'L',
+    };
+    setOrderCurrency(newCurrency);
+    setEditingOrder({ ...editingOrder, currency: newCurrency });
   };
 
   const calculateQuantitySum = () => {
@@ -121,7 +159,11 @@ const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
           <Text fontWeight="bold" mr={2}>
             Currency:
           </Text>
-          <Select value={orderCurrency.code} disabled={!isEditingOrder} onChange={(e) => handleCurrencyChange(e.target.value)}>
+          <Select
+            value={orderCurrency.code}
+            disabled={!isEditingOrder}
+            onChange={(e) => handleCurrencyChange(e.target.value)}
+          >
             <option value="USD">USD</option>
             <option value="EUR">EUR</option>
             <option value="HNL">HNL</option>
@@ -188,7 +230,14 @@ const OrderCard: React.FC<OrderCardProps> = ({ order }) => {
       </Table>
       {!isOrderActive ? null : isEditingOrder ? (
         <Flex justifyContent="center" mt={4}>
-          <Button colorScheme="green" variant="solid" mr={2} _hover={{ bg: '#243E36' }} _active={{ bg: '#243e36' }}>
+          <Button
+            colorScheme="green"
+            variant="solid"
+            mr={2}
+            _hover={{ bg: '#243E36' }}
+            _active={{ bg: '#243e36' }}
+            onClick={handleSave}
+          >
             Save
           </Button>
           <Button

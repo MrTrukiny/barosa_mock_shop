@@ -3,13 +3,14 @@ import { Box, Text, Image, Badge } from '@chakra-ui/react';
 import { FiPlus } from 'react-icons/fi';
 import { Product } from '../../state/productState';
 import { useCartState } from '../../state/cartState';
+import { useAuthState } from '../../state/authState';
 
 type ProductCardProps = {
   product: Product;
-  isLoggedIn: boolean;
 };
 
-const ProductCard: React.FC<ProductCardProps> = ({ product, isLoggedIn }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+  const { isLoggedIn } = useAuthState();
   const [isHovered, setIsHovered] = useState(false);
   const { addProduct } = useCartState();
 

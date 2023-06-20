@@ -1,6 +1,5 @@
 import { Schema, Types, model } from 'mongoose';
 import { User } from './auth.types';
-import { AuthRegister } from './auth.types';
 
 export interface UserMongoose extends Omit<User, 'password'> {
   id?: Types.ObjectId;

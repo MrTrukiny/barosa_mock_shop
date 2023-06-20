@@ -38,10 +38,12 @@ const AllOrders: React.FC = () => {
 
   useEffect(() => {
     fetchOrders();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   useEffect(() => {
     handleStatusFilter(statusFilterRef.current?.value || '');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderList]);
 
   return (

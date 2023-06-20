@@ -32,7 +32,7 @@ export const orderListAtom = atom<Order[]>({
 
 export const editingOrderAtom = atom<Order | null>({
   key: 'editingOrder',
-  default: {} as Order,
+  default: null,
 });
 
 export const useOrderState = () => {
